@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <link
+      href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.1/css/bootstrap-reboot.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        position: relative;
+        margin-bottom: 3rem;
+      }
+
+      h1 {
+        font-size: 1.3rem;
+        display: block;
+        width: 100%;
+        background-color: white;
+        padding: 1rem;
+        position: sticky;
+        top: 0;
+        left: 0;
+        right: 0;
+      }
+
+      .app {
+        width: 800px;
+        flex: initial;
+      }
+
+      .app .form {
+        border: 1px solid #ccc;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border-radius: 0.2rem;
+      }
+
+      .app .form textarea {
+        width: 100%;
+        line-height: 1.2;
+        height: calc(5em * 1.2);
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .app .messages .message-card {
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        margin-bottom: 1rem;
+        border-radius: 0.2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <h1>随便说说</h1>
+    <div class="app">
+      <div x-data="talk" x-init="load" class="form">
+        <h3>说点啥？</h3>
+        <div>
+          <textarea x-model="message"></textarea>
+        </div>
+        <div style="text-align: right"><button x-on:click="send">Send</button></div>
+      </div>
+
+      <div class="messages" x-data>
+        <template x-for="item in $store.messages.list">
+          <div class="message-card">
+            <div style="font-size: 1.1rem" x-text="item.message" class="content"></div>
+            <div style="text-align: right; color: rgb(95, 95, 95); font-size: 0.8rem" x-text="item.createdTime"></div>
+          </div>
+        </template>
+
+        <div style="text-align: center; font-size: 0.5rem; color: rgb(95, 95, 95)">-- 随便说说，不要当真 --</div>
+      </div>
+    </div>
+
+    <script>
+      function formatTimestamp(ts) {
+        const d = new Date(parseInt(ts));
+        const yyyymmdd = [d.getFullYear(), d.getMonth() + 1, d.getDate()];
+
+        const hhmmss = [d.getHours(), d.getMinutes(), d.getSeconds()];
+        return `${yyyymmdd.join('-')} ${hhmmss.join(':')}`;
+      }
+
+      function initAlpine() {
+        Alpine.store('messages', {
+          list: [],
+          update(newVal) {
+            this.list = newVal;
+          },
+        });
+
+        Alpine.data('talk', () => {
+          return {
+            message: '',
+            send() {
+              if (!this.message) {
+                return;
+              }
+
+              fetch('/api/messages', {
+                method: 'post',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  message: this.message,
+                  createdTime: Date.now(),
+                }),
+              }).then(res => {
+                if (!res.ok) {
+                  return res.json();
+                }
+
+                this.load();
+                this.message = '';
+              });
+            },
+
+            load() {
+              fetch(`/api/messages`)
+                .then(res => res.json())
+                .then(list => {
+                  this.$store.messages.update(
+                    list
+                      .sort((a, b) => parseInt(b.created_time) - parseInt(a.created_time))
+                      .map(it => {
+                        return {
+                          message: it.message || '<N/A>',
+                          createdTime: formatTimestamp(it.created_time),
+                        };
+                      }),
+                  );
+                });
+            },
+          };
+        });
+      }
+
+      document.addEventListener('alpine:init', initAlpine);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+{
+  "name": "mytalk",
+  "version": "1.0.0",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "author": "no_name",
+  "license": "MIT",
+  "prettier": {
+    "printWidth": 120,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "arrowParens": "avoid",
+    "endOfLine": "auto"
+  },
+  "eslintConfig": {
+    "env": {
+      "es2021": true,
+      "commonjs": true,
+      "browser": true,
+      "node": true,
+      "worker": true,
+      "mocha": true
+    },
+    "parserOptions": {
+      "sourceType": "module"
+    },
+    "plugins": [
+      "prettier"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:prettier/recommended"
+    ]
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^8.0.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.0.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^7.6.2",
+    "hyper-express": "^6.4.9",
+    "live-directory": "^2.3.2",
+    "uuidv7": "^0.3.5"
+  }
+}
