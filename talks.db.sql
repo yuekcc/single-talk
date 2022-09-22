@@ -1,0 +1,8 @@
+BEGIN TRANSACTION;
+CREATE TABLE IF NOT EXISTS "talk" (
+	"id"	INTEGER,
+	"message"	TEXT,
+	"created_time"	TEXT,
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+COMMIT;
