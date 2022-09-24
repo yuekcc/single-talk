@@ -23,7 +23,7 @@ webserver.get('/www/*', (req, res) => {
 
 webserver.post('/api/messages', async (req, res) => {
   const msg = await req.json();
-  store.addRecord(msg.message, msg.createdTime);
+  store.addRecord(msg.message, msg.messageType, msg.createdTime);
   return res.status(200).send();
 });
 

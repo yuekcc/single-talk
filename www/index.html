@@ -10,7 +10,24 @@
       href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.1/css/bootstrap-reboot.min.css"
       rel="stylesheet"
     />
+    <link
+      href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.1/css/bootstrap-utilities.min.css"
+      rel="stylesheet"
+    />
     <style>
+      html {
+        text-rendering: optimizelegibility;
+      }
+
+      /* 要注意表单元素并不继承父级 font 的问题 */
+      body,
+      button,
+      input,
+      select,
+      textarea {
+        font: 400 1em/1.8 Palatino, Optima, Georgia, serif;
+      }
+
       body {
         display: flex;
         justify-content: center;
@@ -34,7 +51,9 @@
 
       .app {
         width: 800px;
+        max-width: 100%;
         flex: initial;
+        padding: 1rem;
       }
 
       .app .form {
@@ -53,30 +72,49 @@
       }
 
       .app .messages .message-card {
-        padding: 0.5rem;
+        padding: 0.8rem;
         border: 1px solid #ccc;
         margin-bottom: 1rem;
         border-radius: 0.2rem;
+      }
+
+      .app .messages .message-card .content {
+        line-height: 1.8;
       }
     </style>
   </head>
   <body>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    <h1>随便说说</h1>
+    <h1 class="shadow-sm mb-3">随便说说</h1>
     <div class="app">
-      <div x-data="talk" x-init="load" class="form">
+      <div x-data="talk" x-init="load" class="form bg-success p-2 text-dark bg-opacity-10">
         <h3>说点啥？</h3>
         <div>
           <textarea x-model="message"></textarea>
         </div>
-        <div style="text-align: right"><button x-on:click="send">Send</button></div>
+        <div class="d-flex justify-content-between">
+          <div>
+            <select x-model="messageType">
+              <option value="text">文字</option>
+              <option value="code">代码</option>
+            </select>
+          </div>
+          <div><button x-on:click="send">Send</button></div>
+        </div>
       </div>
 
       <div class="messages" x-data>
         <template x-for="item in $store.messages.list">
-          <div class="message-card">
-            <div style="font-size: 1.1rem" x-text="item.message" class="content"></div>
+          <div class="message-card shadow-sm">
+            <template x-if="!item.message_type">
+              <div style="font-size: 1.1rem" x-text="item.message" class="content"></div>
+            </template>
+            <template x-if="item.message_type === 'code'">
+              <div style="font-size: 1.1rem" class="content code">
+                <pre x-text="item.message" class="font-monospace"></pre>
+              </div>
+            </template>
             <div style="text-align: right; color: rgb(95, 95, 95); font-size: 0.8rem" x-text="item.createdTime"></div>
           </div>
         </template>
@@ -105,6 +143,7 @@
         Alpine.data('talk', () => {
           return {
             message: '',
+            messageType: '',
             send() {
               if (!this.message) {
                 return;
@@ -117,6 +156,7 @@
                 },
                 body: JSON.stringify({
                   message: this.message,
+                  messageType: this.messageType,
                   createdTime: Date.now(),
                 }),
               }).then(res => {
@@ -138,6 +178,7 @@
                       .sort((a, b) => parseInt(b.created_time) - parseInt(a.created_time))
                       .map(it => {
                         return {
+                          ...it,
                           message: it.message || '<N/A>',
                           createdTime: formatTimestamp(it.created_time),
                         };
