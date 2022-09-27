@@ -88,44 +88,25 @@
 
     <div class="shadow-sm mb-3 d-flex w-100 align-items-center">
       <h1><a href="/">随便说说</a></h1>
-      <div style="width: 3em">
-        <a href="/api/logout">注销</a>
-      </div>
     </div>
-
-    <div class="app">
-      <div x-data="talk" x-init="load" class="form bg-success p-2 text-dark bg-opacity-10">
-        <h3>说点啥？</h3>
-        <div>
-          <textarea x-model="message"></textarea>
+    <div class="app d-flex justify-content-center">
+      <div x-data="loginForm">
+        <div>用户名</div>
+        <div class="form-item" :class="requireUsernameAndPassword ? 'border border-danger' : ''">
+          <input type="text" x-model="username" />
         </div>
-        <div class="d-flex justify-content-between">
-          <div>
-            <select x-model="messageType">
-              <option value="text">文字</option>
-              <option value="code">代码</option>
-            </select>
-          </div>
-          <div><button x-on:click="send">Send</button></div>
+        <div>密码</div>
+        <div class="form-item" :class="requireUsernameAndPassword ? 'border border-danger' : ''">
+          <input type="password" x-model="password" />
         </div>
-      </div>
-
-      <div class="messages" x-data>
-        <template x-for="item in $store.messages.list">
-          <div class="message-card shadow-sm">
-            <template x-if="!item.message_type">
-              <div style="font-size: 1.1rem" x-text="item.message" class="content"></div>
-            </template>
-            <template x-if="item.message_type === 'code'">
-              <div style="font-size: 1.1rem" class="content code">
-                <pre x-text="item.message" class="font-monospace"></pre>
-              </div>
-            </template>
-            <div style="text-align: right; color: rgb(95, 95, 95); font-size: 0.8rem" x-text="item.createdTime"></div>
+        <template x-if="usernameOrPasswordInvalid">
+          <div class="text-danger">
+            <p>账号或密码错误</p>
           </div>
         </template>
-
-        <div style="text-align: center; font-size: 0.5rem; color: rgb(95, 95, 95)">-- 随便说说，不要当真 --</div>
+        <div class="mt-3">
+          <button x-on:click="startLogin">登录</button>
+        </div>
       </div>
     </div>
 
@@ -139,61 +120,39 @@
       }
 
       function initAlpine() {
-        Alpine.store('messages', {
-          list: [],
-          update(newVal) {
-            this.list = newVal;
-          },
-        });
-
-        Alpine.data('talk', () => {
+        Alpine.data('loginForm', () => {
           return {
-            message: '',
-            messageType: '',
-            async send() {
-              if (!this.message) {
+            username: '',
+            password: '',
+            requireUsernameAndPassword: false,
+            usernameOrPasswordInvalid: false,
+            async startLogin() {
+              this.usernameOrPasswordInvalid = false;
+
+              if (this.username === '' || this.password === '') {
+                this.requireUsernameAndPassword = true;
                 return;
               }
 
-              const res = await fetch('/api/messages', {
+              this.requireUsernameAndPassword = false;
+
+              const res = await fetch('/api/login', {
                 method: 'post',
                 headers: {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  message: this.message,
-                  messageType: this.messageType,
-                  createdTime: Date.now(),
+                  username: this.username,
+                  password: this.password,
                 }),
               });
 
               if (res.ok) {
-                this.load();
-                this.message = '';
-              }
-            },
-
-            async load() {
-              const res = await fetch(`/api/messages`);
-              if (res.ok) {
-                const list = await res.json();
-                const updated = list
-                  .sort((a, b) => parseInt(b.created_time) - parseInt(a.created_time))
-                  .map(it => {
-                    return {
-                      ...it,
-                      message: it.message || '<N/A>',
-                      createdTime: formatTimestamp(it.created_time),
-                    };
-                  });
-
-                this.$store.messages.update(updated);
+                window.location.href = res.headers.get('location');
                 return;
               }
 
-              if (res.status === 401) {
-                window.location.href = res.headers.get('location');
-              }
+              this.usernameOrPasswordInvalid = true;
             },
           };
         });
