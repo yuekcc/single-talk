@@ -6,159 +6,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>随便说说</title>
 
-    <link
-      href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.1/css/bootstrap-reboot.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.1/css/bootstrap-utilities.min.css"
-      rel="stylesheet"
-    />
-    <style>
-      html {
-        text-rendering: optimizelegibility;
-      }
-
-      /* 要注意表单元素并不继承父级 font 的问题 */
-      body,
-      button,
-      input,
-      select,
-      textarea {
-        font: 400 1em/1.8 Palatino, Optima, Georgia, serif;
-      }
-
-      body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        position: relative;
-        margin-bottom: 3rem;
-      }
-
-      h1 {
-        font-size: 1.3rem;
-        display: block;
-        width: 100%;
-        background-color: white;
-        padding: 1rem;
-        position: sticky;
-        top: 0;
-        left: 0;
-        right: 0;
-      }
-
-      .app {
-        width: 800px;
-        max-width: 100%;
-        flex: initial;
-        padding: 1rem;
-      }
-
-      .app .form {
-        border: 1px solid #ccc;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        border-radius: 0.2rem;
-      }
-
-      .app .form textarea {
-        width: 100%;
-        line-height: 1.2;
-        height: calc(5em * 1.2);
-        padding: 0.5rem;
-        margin-bottom: 1rem;
-      }
-
-      .app .messages .message-card {
-        padding: 0.8rem;
-        border: 1px solid #ccc;
-        margin-bottom: 1rem;
-        border-radius: 0.2rem;
-      }
-
-      .app .messages .message-card .content {
-        line-height: 1.8;
-      }
-    </style>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.classless.min.css" />
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <main>
+      <nav>
+        <ul>
+          <li><a href="/">随便说说</a></li>
+        </ul>
+      </nav>
 
-    <div class="shadow-sm mb-3 d-flex w-100 align-items-center">
-      <h1><a href="/">随便说说</a></h1>
-    </div>
-    <div class="app d-flex justify-content-center">
-      <div x-data="loginForm">
-        <div>用户名</div>
-        <div class="form-item" :class="requireUsernameAndPassword ? 'border border-danger' : ''">
-          <input type="text" x-model="username" />
-        </div>
-        <div>密码</div>
-        <div class="form-item" :class="requireUsernameAndPassword ? 'border border-danger' : ''">
-          <input type="password" x-model="password" />
-        </div>
-        <template x-if="usernameOrPasswordInvalid">
-          <div class="text-danger">
-            <p>账号或密码错误</p>
+      <article id="loginForm" v-scope="LoginForm()"></article>
+    </main>
+
+    <template id="LoginFormComponent">
+      <header>登录</header>
+      <div class="grid">
+        <div>
+          <div>用户名</div>
+          <div class="form-item" :class="requireUsernameAndPassword ? 'border border-danger' : ''">
+            <input type="text" v-model="username" />
           </div>
-        </template>
-        <div class="mt-3">
-          <button x-on:click="startLogin">登录</button>
+        </div>
+        <div>
+          <div>密码</div>
+          <div class="form-item" :class="requireUsernameAndPassword ? 'border border-danger' : ''">
+            <input type="password" v-model="password" />
+          </div>
+        </div>
+        <div v-if="usernameOrPasswordInvalid" class="text-danger">
+          <p>账号或密码错误</p>
         </div>
       </div>
-    </div>
+      <footer>
+        <button @click="startLogin">登录</button>
+      </footer>
+    </template>
 
-    <script>
-      function formatTimestamp(ts) {
-        const d = new Date(parseInt(ts));
-        const yyyymmdd = [d.getFullYear(), d.getMonth() + 1, d.getDate()];
-
-        const hhmmss = [d.getHours(), d.getMinutes(), d.getSeconds()];
-        return `${yyyymmdd.join('-')} ${hhmmss.join(':')}`;
-      }
-
-      function initAlpine() {
-        Alpine.data('loginForm', () => {
-          return {
-            username: '',
-            password: '',
-            requireUsernameAndPassword: false,
-            usernameOrPasswordInvalid: false,
-            async startLogin() {
-              this.usernameOrPasswordInvalid = false;
-
-              if (this.username === '' || this.password === '') {
-                this.requireUsernameAndPassword = true;
-                return;
-              }
-
-              this.requireUsernameAndPassword = false;
-
-              const res = await fetch('/api/login', {
-                method: 'post',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  username: this.username,
-                  password: this.password,
-                }),
-              });
-
-              if (res.ok) {
-                window.location.href = res.headers.get('location');
-                return;
-              }
-
-              this.usernameOrPasswordInvalid = true;
-            },
-          };
-        });
-      }
-
-      document.addEventListener('alpine:init', initAlpine);
-    </script>
+    <script type="module" src="./index.js"></script>
   </body>
 </html>

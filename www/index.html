@@ -6,200 +6,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>随便说说</title>
 
-    <link
-      href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.1/css/bootstrap-reboot.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.1/css/bootstrap-utilities.min.css"
-      rel="stylesheet"
-    />
-    <style>
-      html {
-        text-rendering: optimizelegibility;
-      }
-
-      /* 要注意表单元素并不继承父级 font 的问题 */
-      body,
-      button,
-      input,
-      select,
-      textarea {
-        font: 400 1em/1.8 Palatino, Optima, Georgia, serif;
-      }
-
-      body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        position: relative;
-        margin-bottom: 3rem;
-      }
-
-      h1 {
-        font-size: 1.3rem;
-        display: block;
-        width: 100%;
-        background-color: white;
-        padding: 1rem;
-        position: sticky;
-        top: 0;
-        left: 0;
-        right: 0;
-      }
-
-      .app {
-        width: 800px;
-        max-width: 100%;
-        flex: initial;
-        padding: 1rem;
-      }
-
-      .app .form {
-        border: 1px solid #ccc;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        border-radius: 0.2rem;
-      }
-
-      .app .form textarea {
-        width: 100%;
-        line-height: 1.2;
-        height: calc(5em * 1.2);
-        padding: 0.5rem;
-        margin-bottom: 1rem;
-      }
-
-      .app .messages .message-card {
-        padding: 0.8rem;
-        border: 1px solid #ccc;
-        margin-bottom: 1rem;
-        border-radius: 0.2rem;
-      }
-
-      .app .messages .message-card .content {
-        line-height: 1.8;
-      }
-    </style>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.classless.min.css" />
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <main>
+      <nav>
+        <ul>
+          <li><a href="/">随便说说</a></li>
+        </ul>
+        <ul>
+          <li><a href="/api/logout">注销</a></li>
+        </ul>
+      </nav>
 
-    <div class="shadow-sm mb-3 d-flex w-100 align-items-center">
-      <h1><a href="/">随便说说</a></h1>
-      <div style="width: 3em">
-        <a href="/api/logout">注销</a>
-      </div>
-    </div>
+      <div v-scope="SendMessage()" @vue:mounted="load"></div>
+      <div v-scope="MessageList()" class="messages"></div>
+    </main>
 
-    <div class="app">
-      <div x-data="talk" x-init="load" class="form bg-success p-2 text-dark bg-opacity-10">
-        <h3>说点啥？</h3>
-        <div>
-          <textarea x-model="message"></textarea>
-        </div>
-        <div class="d-flex justify-content-between">
-          <div>
-            <select x-model="messageType">
-              <option value="text">文字</option>
-              <option value="code">代码</option>
-            </select>
+    <template id="sendMessageTemplate">
+      <article>
+        <header>说点啥？</header>
+        <textarea v-model="message"></textarea>
+        <footer>
+          <div class="grid">
+            <div>
+              <select v-model="messageType">
+                <option value="text">文字</option>
+                <option value="code">代码</option>
+              </select>
+            </div>
+            <div>
+              <button @click="send">Send</button>
+            </div>
           </div>
-          <div><button x-on:click="send">Send</button></div>
-        </div>
-      </div>
+        </footer>
+      </article>
+    </template>
 
-      <div class="messages" x-data>
-        <template x-for="item in $store.messages.list">
-          <div class="message-card shadow-sm">
-            <template x-if="!item.message_type">
-              <div style="font-size: 1.1rem" x-text="item.message" class="content"></div>
-            </template>
-            <template x-if="item.message_type === 'code'">
-              <div style="font-size: 1.1rem" class="content code">
-                <pre x-text="item.message" class="font-monospace"></pre>
-              </div>
-            </template>
-            <div style="text-align: right; color: rgb(95, 95, 95); font-size: 0.8rem" x-text="item.createdTime"></div>
+    <template id="messageListTemplate">
+      <div class="message-card shadow-sm" v-for="item in messagesStore.list" :key="item.id">
+        <article>
+          <div v-if="item.message_type === 'code'" style="font-size: 1.1rem" class="content code">
+            <pre v-text="item.message" class="font-monospace"></pre>
           </div>
-        </template>
-
-        <div style="text-align: center; font-size: 0.5rem; color: rgb(95, 95, 95)">-- 随便说说，不要当真 --</div>
+          <p v-else v-text="item.message" class="content"></p>
+          <footer
+            style="text-align: right; color: rgb(95, 95, 95); font-size: 0.8rem"
+            v-text="item.createdTime"
+          ></footer>
+        </article>
       </div>
-    </div>
 
-    <script>
-      function formatTimestamp(ts) {
-        const d = new Date(parseInt(ts));
-        const yyyymmdd = [d.getFullYear(), d.getMonth() + 1, d.getDate()];
+      <div style="text-align: center; font-size: 0.5rem; color: rgb(95, 95, 95)">-- 随便说说，不要当真 --</div>
+    </template>
 
-        const hhmmss = [d.getHours(), d.getMinutes(), d.getSeconds()];
-        return `${yyyymmdd.join('-')} ${hhmmss.join(':')}`;
-      }
-
-      function initAlpine() {
-        Alpine.store('messages', {
-          list: [],
-          update(newVal) {
-            this.list = newVal;
-          },
-        });
-
-        Alpine.data('talk', () => {
-          return {
-            message: '',
-            messageType: '',
-            async send() {
-              if (!this.message) {
-                return;
-              }
-
-              const res = await fetch('/api/messages', {
-                method: 'post',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  message: this.message,
-                  messageType: this.messageType,
-                  createdTime: Date.now(),
-                }),
-              });
-
-              if (res.ok) {
-                this.load();
-                this.message = '';
-              }
-            },
-
-            async load() {
-              const res = await fetch(`/api/messages`);
-              if (res.ok) {
-                const list = await res.json();
-                const updated = list
-                  .sort((a, b) => parseInt(b.created_time) - parseInt(a.created_time))
-                  .map(it => {
-                    return {
-                      ...it,
-                      message: it.message || '<N/A>',
-                      createdTime: formatTimestamp(it.created_time),
-                    };
-                  });
-
-                this.$store.messages.update(updated);
-                return;
-              }
-
-              if (res.status === 401) {
-                window.location.href = res.headers.get('location');
-              }
-            },
-          };
-        });
-      }
-
-      document.addEventListener('alpine:init', initAlpine);
-    </script>
+    <script type="module" src="./index.js"></script>
   </body>
 </html>

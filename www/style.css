@@ -1,0 +1,8 @@
+html {
+  text-rendering: optimizelegibility;
+}
+
+:root {
+  --spacing: 0.5rem;
+  --form-element-spacing-vertical: 0.5rem
+}
