@@ -6,16 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>随便说说</title>
 
-    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.classless.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime/mini.global.js"></script>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <main>
-      <nav>
-        <ul>
+      <nav class="flex pt-1rem pb-1rem">
+        <ul class="flex-1 list-none">
           <li><a href="/">随便说说</a></li>
         </ul>
-        <ul>
+        <ul class="flex-initial list-none">
           <li><a href="/api/logout">注销</a></li>
         </ul>
       </nav>
@@ -25,19 +25,23 @@
     </main>
 
     <template id="sendMessageTemplate">
-      <article>
-        <header>说点啥？</header>
-        <textarea v-model="message"></textarea>
+      <article class="border-1 shadow-lg rounded mb-2rem p-1rem">
+        <header class="mb-1rem">说点啥？</header>
+        <div class="mb-1rem">
+          <textarea v-model="message" class="w-full p-10px border-1"></textarea>
+        </div>
+
         <footer>
-          <div class="grid">
-            <div>
-              <select v-model="messageType">
+          <div class="flex justify-between">
+            <div class="flex-initial">
+              
+            </div>
+            <div class="flex-initial">
+              <select v-model="messageType" class="border-1 p-0.5rem">
                 <option value="text">文字</option>
                 <option value="code">代码</option>
               </select>
-            </div>
-            <div>
-              <button @click="send">Send</button>
+              <button @click="send" class="border-1 p-0.5rem bg-blue color-white">保存</button>
             </div>
           </div>
         </footer>
@@ -45,8 +49,8 @@
     </template>
 
     <template id="messageListTemplate">
-      <div class="message-card shadow-sm" v-for="item in messagesStore.list" :key="item.id">
-        <article>
+      <div class="border-1 border-l-5 shadow-lg rounded mb-1.5rem" v-for="item in messagesStore.list" :key="item.id">
+        <article class="p-1rem line">
           <div v-if="item.message_type === 'code'" style="font-size: 1.1rem" class="content code">
             <pre v-text="item.message" class="font-monospace"></pre>
           </div>
